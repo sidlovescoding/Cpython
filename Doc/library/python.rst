@@ -27,6 +27,7 @@ overview:
    inspect.rst
    annotationlib.rst
    site.rst
+   extras.rst
 
 .. seealso::
 
