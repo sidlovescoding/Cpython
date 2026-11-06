@@ -151,6 +151,7 @@ static const char* _Py_stdlib_module_names[] = {
 "ensurepip",
 "enum",
 "errno",
+"extras",
 "faulthandler",
 "fcntl",
 "filecmp",
