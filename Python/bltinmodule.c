@@ -1021,6 +1021,124 @@ builtin_divmod_impl(PyObject *module, PyObject *x, PyObject *y)
 
 
 /*[clinic input]
+clamp as builtin_clamp
+
+    value: object
+    lo: object
+    hi: object
+    /
+
+Return value limited to the range from lo to hi, inclusive.
+
+Return lo if value is less than lo, hi if value is greater than hi, and
+value otherwise.  Raise ValueError if lo is greater than hi.
+[clinic start generated code]*/
+
+static PyObject *
+builtin_clamp_impl(PyObject *module, PyObject *value, PyObject *lo,
+                   PyObject *hi)
+/*[clinic end generated code: output=2ce61651af31e3a2 input=b6c9bcd6ac41a3cb]*/
+{
+    int cmp = PyObject_RichCompareBool(lo, hi, Py_GT);
+    if (cmp < 0) {
+        return NULL;
+    }
+    if (cmp) {
+        PyErr_SetString(PyExc_ValueError,
+                        "clamp() lo must not be greater than hi");
+        return NULL;
+    }
+    cmp = PyObject_RichCompareBool(value, lo, Py_LT);
+    if (cmp < 0) {
+        return NULL;
+    }
+    if (cmp) {
+        return Py_NewRef(lo);
+    }
+    cmp = PyObject_RichCompareBool(value, hi, Py_GT);
+    if (cmp < 0) {
+        return NULL;
+    }
+    return Py_NewRef(cmp ? hi : value);
+}
+
+
+
+/* Should flatten() expand this item rather than keep it as it is? */
+static int
+flatten_should_expand(PyObject *item)
+{
+    if (PyUnicode_Check(item) || PyBytes_Check(item)
+        || PyByteArray_Check(item))
+    {
+        return 0;
+    }
+    return Py_TYPE(item)->tp_iter != NULL || PySequence_Check(item);
+}
+
+/* Append the items of iterable to result, expanding nested iterables.
+   The recursion check turns a self-referencing list into a RecursionError
+   rather than a crash. */
+static int
+flatten_into(PyObject *result, PyObject *iterable)
+{
+    PyObject *iterator = PyObject_GetIter(iterable);
+    if (iterator == NULL) {
+        return -1;
+    }
+    if (Py_EnterRecursiveCall(" in flatten()")) {
+        Py_DECREF(iterator);
+        return -1;
+    }
+    int status = 0;
+    PyObject *item;
+    while (status == 0 && (item = PyIter_Next(iterator)) != NULL) {
+        if (flatten_should_expand(item)) {
+            status = flatten_into(result, item);
+        }
+        else {
+            status = PyList_Append(result, item);
+        }
+        Py_DECREF(item);
+    }
+    Py_LeaveRecursiveCall();
+    Py_DECREF(iterator);
+    if (status < 0 || PyErr_Occurred()) {
+        return -1;
+    }
+    return 0;
+}
+
+/*[clinic input]
+flatten as builtin_flatten
+
+    iterable: object
+    /
+
+Return a new list of the items of iterable, with nesting removed.
+
+Items that are themselves iterable are expanded, however deeply they are
+nested.  str, bytes and bytearray items are kept whole.
+[clinic start generated code]*/
+
+static PyObject *
+builtin_flatten(PyObject *module, PyObject *iterable)
+/*[clinic end generated code: output=cc3b9f6cd8cf6a69 input=50e48da8061f878c]*/
+{
+    PyObject *result = PyList_New(0);
+    if (result == NULL) {
+        return NULL;
+    }
+    if (flatten_into(result, iterable) < 0) {
+        Py_DECREF(result);
+        return NULL;
+    }
+    return result;
+}
+
+
+
+/*[clinic input]
 eval as builtin_eval
 
     source: object
@@ -3456,12 +3574,14 @@ static PyMethodDef builtin_methods[] = {
     {"breakpoint", _PyCFunction_CAST(builtin_breakpoint), METH_FASTCALL | METH_KEYWORDS, breakpoint_doc},
     BUILTIN_CALLABLE_METHODDEF
     BUILTIN_CHR_METHODDEF
+    BUILTIN_CLAMP_METHODDEF
     BUILTIN_COMPILE_METHODDEF
     BUILTIN_DELATTR_METHODDEF
     {"dir", builtin_dir, METH_VARARGS, dir_doc},
     BUILTIN_DIVMOD_METHODDEF
     BUILTIN_EVAL_METHODDEF
     BUILTIN_EXEC_METHODDEF
+    BUILTIN_FLATTEN_METHODDEF
     BUILTIN_FORMAT_METHODDEF
     {"getattr", _PyCFunction_CAST(builtin_getattr), METH_FASTCALL, getattr_doc},
     BUILTIN_GLOBALS_METHODDEF

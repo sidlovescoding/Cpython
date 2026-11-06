@@ -403,6 +403,114 @@ class BuiltinTest(ComplexesAreIdenticalMixin, unittest.TestCase):
         c3 = C3()
         self.assertTrue(callable(c3))
 
+    def test_clamp(self):
+        self.assertEqual(clamp(15, 0, 10), 10)
+        self.assertEqual(clamp(-5, 0, 10), 0)
+        self.assertEqual(clamp(5, 0, 10), 5)
+        # The bounds themselves are inside the range.
+        self.assertEqual(clamp(0, 0, 10), 0)
+        self.assertEqual(clamp(10, 0, 10), 10)
+        self.assertEqual(clamp(3, 7, 7), 7)
+        # Anything that can be compared works.
+        self.assertEqual(clamp(2.5, 0.0, 1.0), 1.0)
+        self.assertEqual(clamp(5, 0.5, 1.5), 1.5)
+        self.assertEqual(clamp('m', 'a', 'f'), 'f')
+        self.assertEqual(clamp(fractions.Fraction(1, 2), 0, 1),
+                         fractions.Fraction(1, 2))
+        self.assertEqual(clamp(10**100, 0, 10**99), 10**99)
+
+    def test_clamp_returns_same_object(self):
+        lo, hi = [1], [3]
+        value = [2]
+        self.assertIs(clamp(value, lo, hi), value)
+        self.assertIs(clamp([0], lo, hi), lo)
+        self.assertIs(clamp([9], lo, hi), hi)
+
+    def test_clamp_nan(self):
+        nan = float('nan')
+        self.assertIs(clamp(nan, 0.0, 1.0), nan)
+
+    def test_clamp_errors(self):
+        with self.assertRaisesRegex(ValueError, 'lo must not be greater'):
+            clamp(5, 10, 0)
+        self.assertRaises(TypeError, clamp)
+        self.assertRaises(TypeError, clamp, 1, 2)
+        self.assertRaises(TypeError, clamp, 1, 2, 3, 4)
+        self.assertRaises(TypeError, clamp, 'a', 0, 10)
+        self.assertRaises(TypeError, clamp, 1, 'a', 10)
+
+    def test_clamp_comparison_error_propagates(self):
+        class Bad:
+            def __lt__(self, other):
+                raise ZeroDivisionError
+            __gt__ = __lt__
+        self.assertRaises(ZeroDivisionError, clamp, Bad(), 0, 10)
+        self.assertRaises(ZeroDivisionError, clamp, 5, Bad(), 10)
+        self.assertRaises(ZeroDivisionError, clamp, 5, 0, Bad())
+
+    def test_flatten(self):
+        self.assertEqual(flatten([]), [])
+        self.assertEqual(flatten([[], [[]], ()]), [])
+        self.assertEqual(flatten([1, 2, 3]), [1, 2, 3])
+        self.assertEqual(flatten([1, [2, [3, [4, [5]]]], 6]),
+                         [1, 2, 3, 4, 5, 6])
+        self.assertEqual(flatten(([1], (2,), {3})), [1, 2, 3])
+        self.assertEqual(flatten(x for x in [[1], [2]]), [1, 2])
+        self.assertEqual(flatten([range(3), iter([3, [4]])]), [0, 1, 2, 3, 4])
+        self.assertEqual(flatten([{'a': 1, 'b': 2}]), ['a', 'b'])
+
+    def test_flatten_returns_new_list(self):
+        source = [1, 2]
+        result = flatten(source)
+        self.assertIsNot(result, source)
+        self.assertIsInstance(result, list)
+
+    def test_flatten_keeps_text_and_bytes_whole(self):
+        self.assertEqual(flatten(['abc', ['de']]), ['abc', 'de'])
+        self.assertEqual(flatten([b'abc', [bytearray(b'de')]]),
+                         [b'abc', bytearray(b'de')])
+        self.assertEqual(flatten(['']), [''])
+        # Subclasses too.
+        class S(str):
+            pass
+        self.assertEqual(flatten([S('abc')]), ['abc'])
+        # Like list(), the outer argument is always iterated.
+        self.assertEqual(flatten('ab'), ['a', 'b'])
+
+    def test_flatten_non_iterable_items_kept(self):
+        marker = object()
+        self.assertEqual(flatten([1, None, marker, int]),
+                         [1, None, marker, int])
+
+    def test_flatten_old_style_sequence(self):
+        class Seq:
+            def __getitem__(self, index):
+                if index >= 2:
+                    raise IndexError
+                return [index]
+        self.assertEqual(flatten([Seq()]), [0, 1])
+
+    def test_flatten_errors(self):
+        self.assertRaises(TypeError, flatten)
+        self.assertRaises(TypeError, flatten, 5)
+        self.assertRaises(TypeError, flatten, [1], [2])
+
+    def test_flatten_iteration_error_propagates(self):
+        def gen():
+            yield 1
+            raise ZeroDivisionError
+        self.assertRaises(ZeroDivisionError, flatten, [[gen()]])
+
+        class BadIter:
+            def __iter__(self):
+                raise ZeroDivisionError
+        self.assertRaises(ZeroDivisionError, flatten, [BadIter()])
+
+    def test_flatten_self_reference(self):
+        loop = [1]
+        loop.append(loop)
+        self.assertRaises(RecursionError, flatten, loop)
+
     def test_chr(self):
         self.assertEqual(chr(0), '\0')
         self.assertEqual(chr(32), ' ')

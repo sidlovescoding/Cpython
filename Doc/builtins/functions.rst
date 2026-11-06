@@ -17,28 +17,29 @@ are always available.  They are listed here in alphabetical order.
 | |  :func:`anext`        | |                     | |                     | |  :func:`round`        |
 | |  :func:`any`          | |  **F**              | |  **M**              | |                       |
 | |  :func:`ascii`        | |  :func:`filter`     | |  :func:`map`        | |  **S**                |
-| |                       | |  :func:`float`      | |  :func:`max`        | |  |func-set|_          |
-| |  **B**                | |  :func:`format`     | |  |func-memoryview|_ | |  :func:`setattr`      |
-| |  :func:`bin`          | |  |func-frozendict|_ | |  :func:`min`        | |  :func:`sentinel`     |
-| |  :func:`bool`         | |  |func-frozenset|_  | |                     | |  :func:`slice`        |
-| |  :func:`breakpoint`   | |                     | |  **N**              | |  :func:`sorted`       |
-| |  |func-bytearray|_    | |  **G**              | |  :func:`next`       | |  :func:`staticmethod` |
-| |  |func-bytes|_        | |  :func:`getattr`    | |                     | |  |func-str|_          |
-| |                       | |  :func:`globals`    | |  **O**              | |  :func:`sum`          |
-| |  **C**                | |                     | |  :func:`object`     | |  :func:`super`        |
-| |  :func:`callable`     | |  **H**              | |  :func:`oct`        | |                       |
-| |  :func:`chr`          | |  :func:`hasattr`    | |  :func:`open`       | |  **T**                |
-| |  :func:`classmethod`  | |  :func:`hash`       | |  :func:`ord`        | |  |func-tuple|_        |
-| |  :func:`compile`      | |  :func:`help`       | |                     | |  :func:`type`         |
-| |  :func:`complex`      | |  :func:`hex`        | |  **P**              | |                       |
-| |                       | |                     | |  :func:`pow`        | |  **V**                |
-| |  **D**                | |  **I**              | |  :func:`print`      | |  :func:`vars`         |
-| |  :func:`delattr`      | |  :func:`id`         | |  :func:`property`   | |                       |
-| |  |func-dict|_         | |  :func:`input`      | |                     | |  **Z**                |
-| |  :func:`dir`          | |  :func:`int`        | |                     | |  :func:`zip`          |
-| |  :func:`divmod`       | |  :func:`isinstance` | |                     | |                       |
-| |                       | |  :func:`issubclass` | |                     | |  **_**                |
-| |                       | |  :func:`iter`       | |                     | |  :func:`__import__`   |
+| |                       | |  :func:`flatten`    | |  :func:`max`        | |  |func-set|_          |
+| |  **B**                | |  :func:`float`      | |  |func-memoryview|_ | |  :func:`setattr`      |
+| |  :func:`bin`          | |  :func:`format`     | |  :func:`min`        | |  :func:`sentinel`     |
+| |  :func:`bool`         | |  |func-frozendict|_ | |                     | |  :func:`slice`        |
+| |  :func:`breakpoint`   | |  |func-frozenset|_  | |  **N**              | |  :func:`sorted`       |
+| |  |func-bytearray|_    | |                     | |  :func:`next`       | |  :func:`staticmethod` |
+| |  |func-bytes|_        | |  **G**              | |                     | |  |func-str|_          |
+| |                       | |  :func:`getattr`    | |  **O**              | |  :func:`sum`          |
+| |  **C**                | |  :func:`globals`    | |  :func:`object`     | |  :func:`super`        |
+| |  :func:`callable`     | |                     | |  :func:`oct`        | |                       |
+| |  :func:`chr`          | |  **H**              | |  :func:`open`       | |  **T**                |
+| |  :func:`clamp`        | |  :func:`hasattr`    | |  :func:`ord`        | |  |func-tuple|_        |
+| |  :func:`classmethod`  | |  :func:`hash`       | |                     | |  :func:`type`         |
+| |  :func:`compile`      | |  :func:`help`       | |  **P**              | |                       |
+| |  :func:`complex`      | |  :func:`hex`        | |  :func:`pow`        | |  **V**                |
+| |                       | |                     | |  :func:`print`      | |  :func:`vars`         |
+| |  **D**                | |  **I**              | |  :func:`property`   | |                       |
+| |  :func:`delattr`      | |  :func:`id`         | |                     | |  **Z**                |
+| |  |func-dict|_         | |  :func:`input`      | |                     | |  :func:`zip`          |
+| |  :func:`dir`          | |  :func:`int`        | |                     | |                       |
+| |  :func:`divmod`       | |  :func:`isinstance` | |                     | |  **_**                |
+| |                       | |  :func:`issubclass` | |                     | |  :func:`__import__`   |
+| |                       | |  :func:`iter`       | |                     | |                       |
 +-------------------------+-----------------------+-----------------------+-------------------------+
 
 .. using :func:`dict` would create a link to another page, so local targets are
@@ -294,6 +295,18 @@ are always available.  They are listed here in alphabetical order.
    .. deprecated-removed:: 3.11 3.13
       Class methods can no longer wrap other :term:`descriptors <descriptor>` such as
       :func:`property`.
+
+
+.. function:: clamp(value, lo, hi, /)
+
+   Return *value* limited to the range from *lo* to *hi*, inclusive: *lo* if
+   *value* is less than *lo*, *hi* if *value* is greater than *hi*, and *value*
+   otherwise.  For example, ``clamp(15, 0, 10)`` returns ``10``.
+
+   Any objects that can be compared with each other may be used.  Raise
+   :exc:`ValueError` if *lo* is greater than *hi*.
+
+   This function is a sid-python addition and is not part of official Python.
 
 
 .. function:: compile(source, filename, mode, flags=0, \
@@ -786,6 +799,20 @@ are always available.  They are listed here in alphabetical order.
 
    See :func:`itertools.filterfalse` for the complementary function that returns
    elements of *iterable* for which *function* is false.
+
+
+.. function:: flatten(iterable, /)
+
+   Return a new list of the items of *iterable*, with nesting removed.  Items
+   that are themselves iterable are expanded, however deeply they are nested.
+   For example, ``flatten([1, [2, [3]], (4,)])`` returns ``[1, 2, 3, 4]``.
+
+   :class:`str`, :class:`bytes` and :class:`bytearray` items are kept whole, so
+   ``flatten(['ab', ['cd']])`` returns ``['ab', 'cd']``.  Like :class:`list`,
+   the outer *iterable* itself is always iterated.  A list that contains itself
+   raises :exc:`RecursionError`.
+
+   This function is a sid-python addition and is not part of official Python.
 
 
 .. class:: float(number=0.0, /)
