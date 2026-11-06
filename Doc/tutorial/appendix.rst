@@ -28,6 +28,11 @@ When using the new interactive shell, exit the shell by typing :kbd:`exit`
 or :kbd:`quit`. Adding call parentheses after those commands is not
 required.
 
+sid-python adds two more commands to the new interactive shell.  Type
+:kbd:`history` to show the most recent lines you entered, or :kbd:`help-me` to
+list the available commands and keyboard shortcuts.  If you have a variable
+named ``history``, typing that name shows the variable instead.
+
 If the new interactive shell is not desired, it can be disabled via
 the :envvar:`PYTHON_BASIC_REPL` environment variable.
 
