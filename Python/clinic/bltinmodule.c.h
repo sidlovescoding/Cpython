@@ -405,6 +405,54 @@ exit:
     return return_value;
 }
 
+PyDoc_STRVAR(builtin_clamp__doc__,
+"clamp($module, value, lo, hi, /)\n"
+"--\n"
+"\n"
+"Return value limited to the range from lo to hi, inclusive.\n"
+"\n"
+"Return lo if value is less than lo, hi if value is greater than hi, and\n"
+"value otherwise.  Raise ValueError if lo is greater than hi.");
+
+#define BUILTIN_CLAMP_METHODDEF    \
+    {"clamp", _PyCFunction_CAST(builtin_clamp), METH_FASTCALL, builtin_clamp__doc__},
+
+static PyObject *
+builtin_clamp_impl(PyObject *module, PyObject *value, PyObject *lo,
+                   PyObject *hi);
+
+static PyObject *
+builtin_clamp(PyObject *module, PyObject *const *args, Py_ssize_t nargs)
+{
+    PyObject *return_value = NULL;
+    PyObject *value;
+    PyObject *lo;
+    PyObject *hi;
+
+    if (!_PyArg_CheckPositional("clamp", nargs, 3, 3)) {
+        goto exit;
+    }
+    value = args[0];
+    lo = args[1];
+    hi = args[2];
+    return_value = builtin_clamp_impl(module, value, lo, hi);
+
+exit:
+    return return_value;
+}
+
+PyDoc_STRVAR(builtin_flatten__doc__,
+"flatten($module, iterable, /)\n"
+"--\n"
+"\n"
+"Return a new list of the items of iterable, with nesting removed.\n"
+"\n"
+"Items that are themselves iterable are expanded, however deeply they are\n"
+"nested.  str, bytes and bytearray items are kept whole.");
+
+#define BUILTIN_FLATTEN_METHODDEF    \
+    {"flatten", (PyCFunction)builtin_flatten, METH_O, builtin_flatten__doc__},
+
 PyDoc_STRVAR(builtin_eval__doc__,
 "eval($module, source, /, globals=None, locals=None)\n"
 "--\n"
@@ -1284,4 +1332,4 @@ builtin_issubclass(PyObject *module, PyObject *const *args, Py_ssize_t nargs)
 exit:
     return return_value;
 }
-/*[clinic end generated code: output=bc267a3ce1596f24 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=b4702c11017292de input=a9049054013a1b77]*/
