@@ -10,7 +10,9 @@ from test.support import force_not_colorized
 
 from _pyrepl.console import InteractiveColoredConsole
 from _pyrepl.simple_interact import (
+    _format_history,
     _more_lines,
+    REPL_COMMANDS,
     run_multiline_interactive_console,
 )
 
@@ -226,6 +228,44 @@ SyntaxError: duplicate parameter 'x' in function definition"""
             result = console.runsource("""print("black" <> 'blue')\n""")
         self.assertFalse(result)
         self.assertEqual(f.getvalue(), "True\n")
+
+
+class TestFormatHistory(unittest.TestCase):
+    def test_empty(self):
+        self.assertEqual(_format_history([]), "No history yet.")
+
+    def test_numbers_entries(self):
+        self.assertEqual(
+            _format_history(["a = 1", "print(a)"]),
+            "    1  a = 1\n    2  print(a)",
+        )
+
+    def test_multiline_entry_lines_up(self):
+        self.assertEqual(
+            _format_history(["if x:\n    y()\n", "z"]),
+            "    1  if x:\n           y()\n    2  z",
+        )
+
+    def test_long_history_shows_most_recent(self):
+        entries = [f"line{n}" for n in range(1, 26)]
+        lines = _format_history(entries).splitlines()
+        self.assertEqual(lines[0], "    6  line6")
+        self.assertEqual(lines[19], "   25  line25")
+        self.assertEqual(len(lines), 21)
+        self.assertIn("20 of 25", lines[20])
+        self.assertIn("F2", lines[20])
+
+    def test_exactly_at_limit_has_no_note(self):
+        entries = [f"line{n}" for n in range(1, 21)]
+        lines = _format_history(entries).splitlines()
+        self.assertEqual(len(lines), 20)
+        self.assertEqual(lines[0], "    1  line1")
+
+
+class TestReplCommands(unittest.TestCase):
+    def test_new_commands_registered(self):
+        for name in ("history", "help-me", "clear"):
+            self.assertTrue(callable(REPL_COMMANDS[name]), name)
 
 
 class TestMoreLines(unittest.TestCase):

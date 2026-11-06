@@ -68,12 +68,57 @@ def _clear_screen():
     reader.scheduled_commands.append("clear_screen")
 
 
+_HISTORY_LIMIT = 20
+
+_HELP_ME_TEXT = """\
+Commands you can type (on a line of their own, without parentheses):
+  history    show the most recent lines you typed
+  clear      clear the screen
+  help       open Python's interactive help
+  help-me    show this list
+  exit       leave Python (quit does the same)
+
+Keyboard shortcuts:
+  Up/Down    step through earlier lines
+  Ctrl+R     search earlier lines
+  Tab        complete a name
+  F1         open Python's interactive help
+  F2         browse your whole history
+  F3         paste mode, for pasting larger blocks of code"""
+
+
+def _format_history(history: list[str]) -> str:
+    """Return the most recent history entries as numbered lines."""
+    if not history:
+        return "No history yet."
+    skipped = max(len(history) - _HISTORY_LIMIT, 0)
+    lines = []
+    for number, entry in enumerate(history[skipped:], skipped + 1):
+        first_line, *other_lines = entry.rstrip("\n").split("\n")
+        lines.append(f"{number:>5}  {first_line}")
+        lines.extend(f"{'':>5}  {line}" for line in other_lines)
+    if skipped:
+        lines.append(f"(showing the last {_HISTORY_LIMIT} of {len(history)}; "
+                     "press F2 to browse them all)")
+    return "\n".join(lines)
+
+
+def _show_history():
+    print(_format_history(_get_reader().history))
+
+
+def _show_commands():
+    print(_HELP_ME_TEXT)
+
+
 REPL_COMMANDS = {
     "exit": _sitebuiltins.Quitter('exit', ''),
     "quit": _sitebuiltins.Quitter('quit' ,''),
     "copyright": _sitebuiltins._Printer('copyright', sys.copyright),
     "help": _sitebuiltins._Helper(),
     "clear": _clear_screen,
+    "history": _show_history,
+    "help-me": _show_commands,
     "\x1a": _sitebuiltins.Quitter('\x1a', ''),
 }
 
@@ -122,6 +167,10 @@ def run_multiline_interactive_console(
         reader = _get_reader()
         reader.history.pop()  # skip internal commands in history
         command = REPL_COMMANDS[statement]
+        if command is _show_history:
+            # suspend_history() below would hide the entries to be shown.
+            command()
+            return True
         if callable(command):
             # Make sure that history does not change because of commands
             with reader.suspend_history(), reader.suspend_colorization():

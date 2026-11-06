@@ -2454,6 +2454,52 @@ class TestMain(ReplTestCase):
             self.assertNotIn("sleep", history)
             self.assertNotIn("quit", history)
 
+    def run_repl_no_color(self, commands):
+        env = os.environ.copy()
+        env.pop("PYTHON_BASIC_REPL", None)
+        env["NO_COLOR"] = "1"  # force_not_colorized doesn't touch subprocesses
+        return self.run_repl(commands, env=env, skip=True)
+
+    def test_history_command(self):
+        output, exit_code = self.run_repl_no_color(
+            "'first entry'\n'second entry'\nhistory\nexit\n"
+        )
+        self.assertEqual(exit_code, 0)
+        self.assertRegex(output, r"1  'first entry'")
+        self.assertRegex(output, r"2  'second entry'")
+        # The command does not list itself or become a history entry.
+        self.assertNotRegex(output, r"3  history")
+        self.assertNotIn("NameError", output)
+
+    def test_history_command_with_empty_history(self):
+        output, exit_code = self.run_repl_no_color("history\nexit\n")
+        self.assertEqual(exit_code, 0)
+        self.assertIn("No history yet", output)
+
+    def test_history_command_keeps_history(self):
+        # Running the command must leave earlier entries in place.
+        output, exit_code = self.run_repl_no_color(
+            "'kept entry'\nhistory\nhistory\nexit\n"
+        )
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(len(re.findall(r"1  'kept entry'", output)), 2)
+
+    def test_history_variable_wins_over_command(self):
+        output, exit_code = self.run_repl_no_color(
+            "history = 'my variable'\nhistory\nexit\n"
+        )
+        self.assertEqual(exit_code, 0)
+        self.assertIn("'my variable'\r\n", output)
+        self.assertNotRegex(output, r"1  history = ")
+
+    def test_help_me_command(self):
+        output, exit_code = self.run_repl_no_color("help-me\nexit\n")
+        self.assertEqual(exit_code, 0)
+        self.assertIn("Commands you can type", output)
+        for name in ("history", "clear", "exit", "F2"):
+            self.assertIn(name, output)
+        self.assertNotIn("NameError", output)
+
     def test_keyboard_interrupt_after_isearch(self):
         output, exit_code = self.run_repl("\x12\x03exit\n")
         self.assertEqual(exit_code, 0)
