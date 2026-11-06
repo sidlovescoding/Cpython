@@ -348,15 +348,19 @@ class JSONDecoder(object):
             raise JSONDecodeError("Extra data", s, end)
         return obj
 
-    def raw_decode(self, s, idx=0):
+    def raw_decode(self, s, idx=0, _w=WHITESPACE.match):
         """Decode a JSON document from ``s`` (a ``str`` beginning with
         a JSON document) and return a 2-tuple of the Python
         representation and the index in ``s`` where the document ended.
+
+        Leading whitespace is skipped; trailing whitespace is not.
 
         This can be used to decode a JSON document from a string that may
         have extraneous data at the end.
 
         """
+        if idx >= 0:
+            idx = _w(s, idx).end()
         try:
             obj, end = self.scan_once(s, idx)
         except StopIteration as err:

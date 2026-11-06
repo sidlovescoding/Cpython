@@ -140,6 +140,13 @@ class TestDecode:
         self.assertEqual(self.loads(bom_in_str), '\ufeff')
         self.assertEqual(self.json.load(StringIO(bom_in_str)), '\ufeff')
 
+    def test_raw_decode_leading_whitespace(self):
+        # gh-59598: leading whitespace is skipped, trailing data is kept.
+        d = self.json.JSONDecoder()
+        self.assertEqual(d.raw_decode(' {}'), ({}, 3))
+        self.assertEqual(d.raw_decode('\n\t [1] x'), ([1], 6))
+        self.assertEqual(d.raw_decode('[1] [2]', 3), ([2], 7))
+
     def test_negative_index(self):
         d = self.json.JSONDecoder()
         self.assertRaises(ValueError, d.raw_decode, 'a'*42, -50000)
