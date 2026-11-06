@@ -1482,6 +1482,12 @@ class CommandLineTest(unittest.TestCase):
             random.seed(0)
             self.assertEqual(random.main(shlex.split(command)), expected)
 
+    def test_main_non_positive_integer(self):
+        # gh-161452: "N" must behave like "--integer N" for every integer.
+        for command in ("0", "-5", "--integer 0"):
+            with self.assertRaises(ValueError):
+                random.main(shlex.split(command))
+
 
 if __name__ == "__main__":
     unittest.main()

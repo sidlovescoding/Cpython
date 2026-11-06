@@ -5500,6 +5500,13 @@ A very long line that must get split to something other than at the
 # Test RFC 2231 header parameters (en/de)coding
 class TestRFC2231(TestEmailBase):
 
+    def test_encode_rfc2231_language_without_charset(self):
+        # gh-161222: an omitted charset must be left blank, not 'None'.
+        eq = self.assertEqual
+        eq(utils.encode_rfc2231('abc', language='en'), "'en'abc")
+        eq(utils.encode_rfc2231('abc', charset='us-ascii'), "us-ascii''abc")
+        eq(utils.encode_rfc2231('abc'), 'abc')
+
     # test_headerregistry.TestContentTypeHeader.rfc2231_encoded_with_double_quotes
     # test_headerregistry.TestContentTypeHeader.rfc2231_single_quote_inside_double_quotes
     def test_get_param(self):

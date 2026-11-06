@@ -1067,15 +1067,18 @@ def main(arg_list: list[str] | None = None) -> int | str:
         try:
             # Is it an integer?
             val = int(val)
-            return randint(1, val)
         except ValueError:
-            try:
-                # Is it a float?
-                val = float(val)
-                return uniform(0, val)
-            except ValueError:
-                # Split in case of space-separated string: "a b c"
-                return choice(val.split())
+            pass
+        else:
+            return randint(1, val)
+        try:
+            # Is it a float?
+            val = float(val)
+        except ValueError:
+            # Split in case of space-separated string: "a b c"
+            return choice(val.split())
+        else:
+            return uniform(0, val)
 
     if len(args.input) >= 2:
         return choice(args.input)

@@ -83,6 +83,16 @@ class ReprTests(unittest.TestCase):
         expected = repr(t3)[:-2] + "+++)"
         eq(r3.repr(t3), expected)
 
+    def test_long_fillvalue_respects_limits(self):
+        # gh-161289: truncation must account for len(fillvalue).
+        r4 = Repr(maxstring=10, maxlong=10, maxother=10, fillvalue='<snip>')
+        self.assertEqual(r4.repr(12345678901234567890), '12<snip>90')
+        self.assertEqual(r4.repr('abcdefghijklmnopqrstuvwxyz'), "'a<snip>z'")
+        class Big:
+            def __repr__(self):
+                return 'x' * 50
+        self.assertEqual(len(r4.repr(Big())), 10)
+
     def test_container(self):
         from array import array
         from collections import deque
