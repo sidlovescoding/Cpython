@@ -36,6 +36,20 @@ It collects a few small helpers for common jobs.
       3
 
 
+.. function:: group_by(iterable, key)
+
+   Return a :class:`dict` that maps each ``key(item)`` to a list of the items
+   of *iterable* with that key.  Groups are in the order their key first
+   appears, and the items in each group keep their order.  This is like
+   ``Object.groupBy()`` in JavaScript and ``groupBy`` in Kotlin.
+
+   Unlike :func:`itertools.groupby`, items with the same key do not need to be
+   next to each other::
+
+      >>> group_by(['apple', 'bean', 'avocado', 'beet'], key=lambda w: w[0])
+      {'a': ['apple', 'avocado'], 'b': ['bean', 'beet']}
+
+
 .. function:: deep_get(data, *keys, default=None)
 
    Follow *keys* and indexes into nested data, without raising an error.
