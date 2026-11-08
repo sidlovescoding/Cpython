@@ -1,0 +1,3 @@
+Fix :exc:`AttributeError` raised by
+:meth:`http.server.BaseHTTPRequestHandler.end_headers` when no response line or
+header had been sent before.
