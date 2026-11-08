@@ -13,6 +13,7 @@ from test.support import os_helper
 from test.support import refleak_helper
 from test.support import socket_helper
 import unittest
+from unittest import mock
 import textwrap
 import mailbox
 import glob
@@ -1297,6 +1298,25 @@ class TestMbox(_TestMboxMMDF, unittest.TestCase):
         # A newline should have been appended to the payload
         message = self._box.get(i)
         self.assertEqual(message.get_payload(), 'No newline at the end\n')
+
+    def test_from_line_with_other_line_endings(self):
+        # gh-110501: The line ending must be removed from the "From " line
+        # even if the file uses line endings other than os.linesep.
+        path = self._path + '.other-eol'
+        self.addCleanup(os_helper.unlink, path)
+        for file_eol, linesep in ((b'\n', b'\r\n'), (b'\r\n', b'\n')):
+            with self.subTest(file_eol=file_eol, linesep=linesep):
+                with open(path, 'wb') as f:
+                    f.write(file_eol.join([b'From foo@bar blah', b'From: foo',
+                                           b'', b'0', b'']))
+                with mock.patch.object(mailbox, 'linesep', linesep):
+                    box = mailbox.mbox(path)
+                    try:
+                        msg = box[0]
+                    finally:
+                        box.close()
+                self.assertEqual(msg.get_unixfrom(), 'From foo@bar blah')
+                self.assertEqual(msg.get_from(), 'foo@bar blah')
 
     def test_message_separator(self):
         # Check there's always a single blank line after each message
