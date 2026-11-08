@@ -1,0 +1,3 @@
+Fix :class:`mailbox.mbox` and :class:`mailbox.MMDF` keeping a trailing line
+ending in the "From " line of a message when the mailbox file uses line
+endings other than :data:`os.linesep`.
