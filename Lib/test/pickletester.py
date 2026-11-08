@@ -5250,6 +5250,55 @@ class AbstractPicklerUnpicklerObjectTests:
         self.assertEqual(unpickled_data2, data)
         self.assertTrue(unpickled_data2 is unpickled_data1)
 
+    def test_priming_unpickler_memo_then_add_objects(self):
+        # gh-111066: Setting the Unpickler's memo to another Unpickler's memo
+        # or to a dict keeps its entries, and objects memoized afterwards do
+        # not overwrite them.
+        data = ["abcdefg", "abcdefg", 44]
+        f = io.BytesIO()
+        pickler = self.pickler_class(f)
+        pickler.dump(data)
+        first_pickled = f.getvalue()
+
+        f = io.BytesIO()
+        primed = self.pickler_class(f)
+        primed.memo = pickler.memo
+        primed.dump([data, ["new"]])
+        primed_pickled = f.getvalue()
+
+        for kind in ('memo', 'dict'):
+            with self.subTest(kind=kind):
+                unpickler = self.unpickler_class(io.BytesIO(first_pickled))
+                unpickled_data1 = unpickler.load()
+                memo = unpickler.memo
+                if kind == 'dict':
+                    memo = memo.copy()
+                    self.assertIsInstance(memo, dict)
+
+                primed = self.unpickler_class(io.BytesIO(primed_pickled))
+                primed.memo = memo
+                self.assertEqual(primed.memo.copy(), unpickler.memo.copy())
+                unpickled_data2 = primed.load()
+                self.assertEqual(unpickled_data2, [data, ["new"]])
+                self.assertIs(unpickled_data2[0], unpickled_data1)
+
+    def test_unpickler_memo_from_sparse_dict(self):
+        # gh-111066: The memo can be set to a dict with non-contiguous keys.
+        unpickler = self.unpickler_class(io.BytesIO(b'h\x00h\x05\x86.'))
+        unpickler.memo = {5: 'b', 0: 'a'}
+        self.assertEqual(unpickler.memo.copy(), {0: 'a', 5: 'b'})
+        self.assertEqual(unpickler.load(), ('a', 'b'))
+
+    def test_unpickler_memo_from_empty_dict(self):
+        # gh-111066: Objects can be memoized after setting an empty memo.
+        data = [['abc'], ['abc']]
+        data[1] = data[0]
+        unpickler = self.unpickler_class(io.BytesIO(pickle.dumps(data)))
+        unpickler.memo = {}
+        unpickled = unpickler.load()
+        self.assertEqual(unpickled, data)
+        self.assertIs(unpickled[0], unpickled[1])
+
     def test_reusing_unpickler_objects(self):
         data1 = ["abcdefg", "abcdefg", 44]
         f = io.BytesIO()
