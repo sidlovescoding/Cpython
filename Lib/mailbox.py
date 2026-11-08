@@ -841,7 +841,7 @@ class _mboxMMDF(_singlefileMailbox):
         """Return a Message representation or raise a KeyError."""
         start, stop = self._lookup(key)
         self._file.seek(start)
-        from_line = self._file.readline().replace(linesep, b'').decode('ascii')
+        from_line = self._file.readline().rstrip(b'\r\n').decode('ascii')
         string = self._file.read(stop - self._file.tell())
         msg = self._message_factory(string.replace(linesep, b'\n'))
         msg.set_unixfrom(from_line)
