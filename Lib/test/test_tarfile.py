@@ -1033,6 +1033,40 @@ class StreamReadTest(CommonReadTest, unittest.TestCase):
         with self.tar.extractfile(tarinfos[0]) as f: # read the first member
             self.assertRaises(tarfile.StreamError, f.read)
 
+    def test_extract_link_copy_from_stream(self):
+        # gh-106980: If a link cannot be created, it is replaced with a copy
+        # of its target, which cannot be read again from a stream.  Raise a
+        # clear error instead of "seeking backwards is not allowed".
+        bio = io.BytesIO()
+        with tarfile.open(fileobj=bio, mode="w") as tar:
+            data = b"data"
+            target = tarfile.TarInfo("target")
+            target.size = len(data)
+            tar.addfile(target, io.BytesIO(data))
+            link = tarfile.TarInfo("link")
+            link.type = tarfile.LNKTYPE
+            link.linkname = "target"
+            tar.addfile(link)
+            symlink = tarfile.TarInfo("symlink")
+            symlink.type = tarfile.SYMTYPE
+            symlink.linkname = "target"
+            tar.addfile(symlink)
+
+        for name in ("link", "symlink"):
+            with (self.subTest(name=name),
+                  os_helper.temp_dir() as dest,
+                  unittest.mock.patch("os.link", side_effect=OSError),
+                  unittest.mock.patch("os.symlink", side_effect=OSError)):
+                bio.seek(0)
+                with tarfile.open(fileobj=bio, mode="r|") as tar:
+                    members = (m for m in tar if m.name in ("target", name))
+                    with self.assertRaisesRegex(tarfile.StreamError,
+                                                "cannot extract.*link"):
+                        tar.extractall(dest, members=members,
+                                       filter="fully_trusted")
+                with open(os.path.join(dest, "target"), "rb") as f:
+                    self.assertEqual(f.read(), data)
+
     def test_compare_members(self):
         tar1 = tarfile.open(tarname, encoding="iso8859-1")
         try:
