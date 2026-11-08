@@ -382,8 +382,9 @@ Standard names are defined for the following types:
 
    .. describe:: proxy[key]
 
-      Return the item of the underlying mapping with key *key*.  Raises a
-      :exc:`KeyError` if *key* is not in the underlying mapping.
+      Return ``mapping[key]``, the item of the underlying mapping with key
+      *key*.  Any exception raised by the underlying mapping is propagated,
+      for example a :exc:`KeyError` if *key* is not in a :class:`dict`.
 
    .. describe:: iter(proxy)
 
