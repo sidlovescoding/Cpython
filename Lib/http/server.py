@@ -598,6 +598,8 @@ class BaseHTTPRequestHandler(socketserver.StreamRequestHandler):
     def end_headers(self):
         """Send the blank line ending the MIME headers."""
         if self.request_version != 'HTTP/0.9':
+            if not hasattr(self, '_headers_buffer'):
+                self._headers_buffer = []
             self._headers_buffer.append(b"\r\n")
             self.flush_headers()
 

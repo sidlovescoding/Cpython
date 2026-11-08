@@ -1451,6 +1451,18 @@ class BaseHTTPRequestHandlerTestCase(unittest.TestCase):
         self.assertEqual(output.getData(), b'Foo: foo\r\nbar: bar\r\n\r\n')
         self.assertEqual(output.numWrites, 1)
 
+    def test_end_headers_without_buffered_headers(self):
+        # gh-131715: end_headers() must not raise AttributeError if no
+        # response line or header has been buffered yet.
+        output = AuditableBytesIO()
+        handler = SocketlessRequestHandler()
+        handler.wfile = output
+        handler.request_version = 'HTTP/1.1'
+
+        handler.end_headers()
+        self.assertEqual(output.getData(), b'\r\n')
+        self.assertEqual(output.numWrites, 1)
+
     def test_header_unbuffered_when_continue(self):
 
         def _readAndReseek(f):
