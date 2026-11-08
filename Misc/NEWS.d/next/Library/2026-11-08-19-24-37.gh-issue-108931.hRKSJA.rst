@@ -1,0 +1,4 @@
+Fix :class:`http.cookiejar.CookieJar` not removing an expired cookie whose
+domain was stored without a leading dot, for example a cookie added with
+:meth:`~http.cookiejar.CookieJar.set_cookie`, when the server expires it with a
+Domain attribute.

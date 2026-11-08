@@ -686,6 +686,21 @@ class CookieTests(unittest.TestCase):
         self.assertIn('expires', cookies)
         self.assertIn('version', cookies)
 
+    def test_expire_cookie_set_without_leading_dot(self):
+        # gh-108931: An expired cookie with a Domain attribute must also
+        # remove a matching cookie stored without the leading dot, for
+        # example one added with set_cookie().  RFC 6265 ignores the dot.
+        for attr in ("www.acme.com", ".www.acme.com"):
+            with self.subTest(domain=attr):
+                c = CookieJar()
+                c.set_cookie(Cookie(0, "foo", "bar", None, False,
+                                    "www.acme.com", True, False, "/", True,
+                                    False, None, False, None, None, {}))
+                self.assertEqual(len(c), 1)
+                interact_netscape(c, "http://www.acme.com/",
+                                  f"foo=; Domain={attr}; Path=/; Max-Age=0")
+                self.assertEqual(len(c), 0)
+
     def test_expires(self):
         # if expires is in future, keep cookie...
         c = CookieJar()

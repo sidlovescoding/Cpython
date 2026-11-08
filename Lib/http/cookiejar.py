@@ -1568,10 +1568,17 @@ class CookieJar:
         elif expires <= self._now:
             # Expiry date in past is request to delete cookie.  This can't be
             # in DefaultCookiePolicy, because can't delete cookies there.
-            try:
-                self.clear(domain, path, name)
-            except KeyError:
-                pass
+            domains = [domain]
+            if domain_specified:
+                # RFC 6265 ignores a leading dot in the Domain attribute,
+                # so also remove a matching cookie stored without it,
+                # e.g. one added with set_cookie() (gh-108931).
+                domains.append(domain[1:])
+            for d in domains:
+                try:
+                    self.clear(d, path, name)
+                except KeyError:
+                    pass
             _debug("Expiring cookie, domain='%s', path='%s', name='%s'",
                    domain, path, name)
             return None
