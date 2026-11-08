@@ -4,6 +4,7 @@ This module is not part of official Python.
 
     unique(iterable, key=None)                 remove duplicates, keep order
     first(iterable, default=None, where=None)  first item, or first match
+    group_by(iterable, key)                    sort items into groups by key
     deep_get(data, *keys, default=None)        safely reach into nested data
     human_size(size, binary=False)             1536000 -> '1.5 MB'
     slugify(text)                              'Hello World!' -> 'hello-world'
@@ -14,7 +15,8 @@ import re
 import time
 import unicodedata
 
-__all__ = ['deep_get', 'first', 'human_size', 'slugify', 'timer', 'unique']
+__all__ = ['deep_get', 'first', 'group_by', 'human_size', 'slugify', 'timer',
+           'unique']
 
 _DECIMAL_UNITS = ('KB', 'MB', 'GB', 'TB', 'PB')
 _BINARY_UNITS = ('KiB', 'MiB', 'GiB', 'TiB', 'PiB')
@@ -53,6 +55,24 @@ def first(iterable, default=None, *, where=None):
         if where is None or where(item):
             return item
     return default
+
+
+def group_by(iterable, key):
+    """Return a dict that maps each key(item) to the list of its items.
+
+    Groups are in the order their key first appears, and the items in each
+    group keep their order.  Unlike itertools.groupby(), items with the same
+    key do not need to be next to each other.
+    """
+    groups = {}
+    for item in iterable:
+        k = key(item)
+        try:
+            group = groups[k]
+        except KeyError:
+            group = groups[k] = []
+        group.append(item)
+    return groups
 
 
 def deep_get(data, *keys, default=None):

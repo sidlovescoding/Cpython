@@ -65,6 +65,50 @@ class FirstTests(unittest.TestCase):
         self.assertEqual(next(items), 2)
 
 
+class GroupByTests(unittest.TestCase):
+    def test_groups_items_that_are_apart(self):
+        words = ['apple', 'bean', 'avocado', 'beet', 'cherry']
+        self.assertEqual(extras.group_by(words, key=lambda w: w[0]),
+                         {'a': ['apple', 'avocado'], 'b': ['bean', 'beet'],
+                          'c': ['cherry']})
+
+    def test_group_order_is_first_appearance(self):
+        groups = extras.group_by([3, 1, 2, 4, 5], key=lambda n: n % 2)
+        self.assertEqual(list(groups), [1, 0])
+        self.assertEqual(groups, {1: [3, 1, 5], 0: [2, 4]})
+
+    def test_key_is_positional_or_keyword(self):
+        self.assertEqual(extras.group_by([1, 2], str),
+                         {'1': [1], '2': [2]})
+        self.assertEqual(extras.group_by([1, 2], key=str),
+                         {'1': [1], '2': [2]})
+
+    def test_empty(self):
+        self.assertEqual(extras.group_by([], key=len), {})
+
+    def test_accepts_any_iterable(self):
+        self.assertEqual(extras.group_by((n for n in range(4)), key=bool),
+                         {False: [0], True: [1, 2, 3]})
+
+    def test_equal_keys_share_a_group(self):
+        self.assertEqual(extras.group_by([1, 1.0, True], key=lambda x: x),
+                         {1: [1, 1.0, True]})
+
+    def test_unhashable_key_raises(self):
+        with self.assertRaises(TypeError):
+            extras.group_by([1], key=lambda x: [x])
+
+    def test_key_error_propagates(self):
+        def key(item):
+            raise ValueError('bad item')
+        with self.assertRaisesRegex(ValueError, 'bad item'):
+            extras.group_by([1], key=key)
+
+    def test_key_is_required(self):
+        with self.assertRaises(TypeError):
+            extras.group_by([1])
+
+
 class DeepGetTests(unittest.TestCase):
     data = {'user': {'name': 'Sid', 'pets': ['Rex', 'Tom']}, 'empty': None}
 
