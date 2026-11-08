@@ -566,6 +566,12 @@ class _GzipReader(_streams.DecompressReader):
         # Set flag indicating start of a new member
         self._new_member = True
         self._last_mtime = None
+        # The gzip data may start after other data in the file object.
+        # Remember where it starts, so that rewinding goes back there.
+        try:
+            self._start_pos = fp.tell()
+        except (AttributeError, OSError):
+            self._start_pos = 0
 
     def _init_read(self):
         self._crc = zlib.crc32(b"")
@@ -654,6 +660,8 @@ class _GzipReader(_streams.DecompressReader):
 
     def _rewind(self):
         super()._rewind()
+        if self._start_pos:
+            self._fp.seek(self._start_pos)
         self._new_member = True
 
 
