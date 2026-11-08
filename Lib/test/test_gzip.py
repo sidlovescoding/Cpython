@@ -304,6 +304,19 @@ class TestGzip(BaseTest):
                 self.assertEqual(line1[:amount], line2)
                 f.seek(newpos)  # positive seek
 
+    def test_seek_backwards_with_leading_data(self):
+        # gh-105426: Seeking backwards must go back to where the gzip data
+        # starts in the file object, not to the start of the file object.
+        data = data1 * 50
+        with io.BytesIO(b'header' + gzip.compress(data)) as raw:
+            raw.read(6)
+            with gzip.GzipFile(fileobj=raw) as f:
+                f.seek(len(data) // 2)
+                f.seek(10)
+                self.assertEqual(f.read(10), data[10:20])
+                f.rewind()
+                self.assertEqual(f.read(), data)
+
     def test_seek_whence(self):
         self.test_write()
         # Try seek(whence=1), read test
