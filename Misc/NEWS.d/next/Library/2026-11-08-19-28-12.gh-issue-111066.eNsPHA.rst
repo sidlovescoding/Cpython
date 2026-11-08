@@ -1,0 +1,4 @@
+Fix setting the :attr:`!memo` attribute of the C implementation of
+:class:`pickle.Unpickler`: a dict lost its entries, objects memoized after
+copying another unpickler's memo overwrote existing entries, and loading after
+setting an empty dict could crash.

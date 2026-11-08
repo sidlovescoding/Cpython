@@ -7768,12 +7768,23 @@ Unpickler_get_memo(PyObject *op, void *Py_UNUSED(closure))
     return UnpicklerMemoProxy_New(self);
 }
 
+/* Release a memo array and the references it holds. */
+static void
+_Unpickler_FreeMemo(PyObject **memo, size_t memo_size)
+{
+    if (memo == NULL) {
+        return;
+    }
+    for (size_t i = memo_size; i-- > 0; ) {
+        Py_XDECREF(memo[i]);
+    }
+    PyMem_Free(memo);
+}
+
 static int
 Unpickler_set_memo(PyObject *op, PyObject *obj, void *Py_UNUSED(closure))
 {
-    PyObject **new_memo;
     UnpicklerObject *self = UnpicklerObject_CAST(op);
-    size_t new_memo_size = 0;
 
     if (obj == NULL) {
         PyErr_SetString(PyExc_TypeError,
@@ -7782,27 +7793,48 @@ Unpickler_set_memo(PyObject *op, PyObject *obj, void *Py_UNUSED(closure))
     }
 
     PickleState *state = _Pickle_FindStateByType(Py_TYPE(self));
-    if (Py_IS_TYPE(obj, state->UnpicklerMemoProxyType)) {
+    int is_proxy = Py_IS_TYPE(obj, state->UnpicklerMemoProxyType);
+    if (!is_proxy && !PyDict_Check(obj)) {
+        PyErr_Format(PyExc_TypeError,
+                     "'memo' attribute must be an UnpicklerMemoProxy object "
+                     "or dict, not %.200s", Py_TYPE(obj)->tp_name);
+        return -1;
+    }
+
+    /* The new memo replaces the old one, which is restored on error. */
+    PyObject **old_memo = self->memo;
+    size_t old_memo_size = self->memo_size;
+    size_t old_memo_len = self->memo_len;
+
+    if (is_proxy) {
         UnpicklerObject *unpickler = /* safe fast cast for 'obj' */
             ((UnpicklerMemoProxyObject *)obj)->unpickler;
+        size_t memo_size = unpickler->memo_size;
+        size_t memo_len = unpickler->memo_len;
 
-        new_memo_size = unpickler->memo_size;
-        new_memo = _Unpickler_NewMemo(new_memo_size);
-        if (new_memo == NULL)
+        PyObject **new_memo = _Unpickler_NewMemo(Py_MAX(memo_size, 1));
+        if (new_memo == NULL) {
             return -1;
-
-        for (size_t i = 0; i < new_memo_size; i++) {
+        }
+        for (size_t i = 0; i < memo_size; i++) {
             new_memo[i] = Py_XNewRef(unpickler->memo[i]);
         }
+        self->memo = new_memo;
+        self->memo_size = Py_MAX(memo_size, 1);
+        self->memo_len = memo_len;
     }
-    else if (PyDict_Check(obj)) {
+    else {
         Py_ssize_t i = 0;
         PyObject *key, *value;
+        size_t new_memo_size = Py_MAX(PyDict_GET_SIZE(obj), 1);
 
-        new_memo_size = PyDict_GET_SIZE(obj);
-        new_memo = _Unpickler_NewMemo(new_memo_size);
-        if (new_memo == NULL)
+        PyObject **new_memo = _Unpickler_NewMemo(new_memo_size);
+        if (new_memo == NULL) {
             return -1;
+        }
+        self->memo = new_memo;
+        self->memo_size = new_memo_size;
+        self->memo_len = 0;
 
         while (PyDict_Next(obj, &i, &key, &value)) {
             Py_ssize_t idx;
@@ -7823,25 +7855,18 @@ Unpickler_set_memo(PyObject *op, PyObject *obj, void *Py_UNUSED(closure))
                 goto error;
         }
     }
-    else {
-        PyErr_Format(PyExc_TypeError,
-                     "'memo' attribute must be an UnpicklerMemoProxy object "
-                     "or dict, not %.200s", Py_TYPE(obj)->tp_name);
-        return -1;
-    }
 
-    _Unpickler_MemoCleanup(self, NULL);
-    self->memo_size = new_memo_size;
-    self->memo = new_memo;
-
+    _Unpickler_FreeMemo(old_memo, old_memo_size);
     return 0;
 
   error:
-    if (new_memo_size) {
-        for (size_t i = new_memo_size - 1; i != SIZE_MAX; i--) {
-            Py_XDECREF(new_memo[i]);
-        }
-        PyMem_Free(new_memo);
+    {
+        PyObject **new_memo = self->memo;
+        size_t new_memo_size = self->memo_size;
+        self->memo = old_memo;
+        self->memo_size = old_memo_size;
+        self->memo_len = old_memo_len;
+        _Unpickler_FreeMemo(new_memo, new_memo_size);
     }
     return -1;
 }
