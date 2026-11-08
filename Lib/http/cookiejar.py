@@ -1586,10 +1586,17 @@ class CookieJar:
             # attribute does not match the request host (step 6) before an
             # existing cookie is removed (steps 11-12)
             if self._policy.set_ok(cookie, request):
-                try:
-                    self.clear(domain, path, name)
-                except KeyError:
-                    pass
+                domains = [domain]
+                if domain_specified:
+                    # RFC 6265 ignores a leading dot in the Domain
+                    # attribute, so also remove a matching cookie stored
+                    # without it, e.g. one added with set_cookie().
+                    domains.append(domain[1:])
+                for d in domains:
+                    try:
+                        self.clear(d, path, name)
+                    except KeyError:
+                        pass
                 _debug("Expiring cookie, domain='%s', path='%s', name='%s'",
                        domain, path, name)
             return None
