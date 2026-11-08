@@ -1428,10 +1428,15 @@ iterations of the loop.
    ``STACK[-1]`` is an :term:`iterator`.  Call its :meth:`~iterator.__next__` method.
    If this yields a new value, push it on the stack (leaving the iterator below
    it).  If the iterator indicates it is :term:`exhausted` then the byte code counter is
-   incremented by *delta*.
+   incremented by *delta*, and the :opcode:`END_FOR` instruction found there is
+   skipped.  The iterator is left on the stack and is removed by the
+   :opcode:`POP_ITER` instruction that follows.
 
    .. versionchanged:: 3.12
-      Up until 3.11 the iterator was popped when it was exhausted.
+      The :opcode:`END_FOR` instruction at the jump target is skipped.
+
+   .. versionchanged:: 3.14
+      Up until 3.13 the iterator was popped when it was exhausted.
 
 .. opcode:: LOAD_GLOBAL (namei)
 
