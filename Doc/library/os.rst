@@ -2851,9 +2851,11 @@ features:
    This function can support :ref:`paths relative to directory descriptors
    <dir_fd>`.
 
-   On Windows, attempting to remove a file that is in use causes an exception to
-   be raised; on Unix, the directory entry is removed but the storage allocated
-   to the file is not made available until the original file is no longer in use.
+   On Windows, attempting to remove a file that is in use usually raises a
+   :exc:`PermissionError`, unless the file was opened with delete access shared,
+   for example with :data:`O_TEMPORARY`; on Unix, the directory entry is removed
+   but the storage allocated to the file is not made available until the
+   original file is no longer in use.
 
    This function is semantically identical to :func:`unlink`.
 
