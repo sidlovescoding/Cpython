@@ -1,0 +1,3 @@
+:mod:`tarfile` now raises :exc:`~tarfile.StreamError` with a clear message
+instead of "seeking backwards is not allowed" when extracting a link from a
+stream fails and the link cannot be replaced with a copy of its target.

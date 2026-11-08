@@ -2888,6 +2888,13 @@ class TarFile(object):
             except _FILTER_ERRORS as cause:
                 raise LinkFallbackError(tarinfo, unfiltered.name) from cause
         if filtered is not None:
+            if (isinstance(self.fileobj, _Stream)
+                    and (filtered.isreg()
+                         or filtered.type not in SUPPORTED_TYPES)):
+                # The data of the link target would have to be read again
+                # from a non-seekable stream of tar blocks to copy it.
+                raise StreamError("cannot extract (sym)link as a copy of its "
+                                  "target from a stream")
             self._extract_member(filtered, targetpath,
                                  filter_function=filter_function,
                                  extraction_root=extraction_root)
