@@ -1,0 +1,3 @@
+Fix seeking backwards in a :class:`gzip.GzipFile` whose file object did not
+start at the gzip data: it now goes back to where the gzip data starts instead
+of to the start of the file object, which raised :exc:`gzip.BadGzipFile`.
