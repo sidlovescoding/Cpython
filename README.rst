@@ -1,7 +1,7 @@
 This is Python version 3.15.2
 =============================
 
-.. image:: https://github.com/sidlovescoding/Cpython/actions/workflows/sid-python.yml/badge.svg?branch=sid-python
+.. image:: https://github.com/sidlovescoding/Cpython/actions/workflows/sid-python.yml/badge.svg?branch=sid-python-3.15
    :alt: sid-python build status on GitHub Actions
    :target: https://github.com/sidlovescoding/Cpython/actions/workflows/sid-python.yml
 
@@ -27,9 +27,9 @@ See the end of this file for further copyright and license information.
 sid-python: changes from official Python
 ----------------------------------------
 
-This is **sid-python**, a personal version of CPython 3.14.  It is still
+This is **sid-python**, a personal version of CPython 3.15.  It is still
 installed and run as ``python``; ``sys.version`` ends with ``(sid-python)``.
-Everything below is in addition to official Python 3.14, and each change has
+Everything below is in addition to official Python 3.15.2, and each change has
 tests.
 
 New built-in functions
@@ -96,7 +96,7 @@ Documentation fixes for ``os.remove()`` (gh-121509),
 Testing
 ^^^^^^^
 
-Every push to the ``sid-python`` branch builds it and runs the full test
+Every push to the ``sid-python-3.15`` branch builds it and runs the full test
 suite on Linux, macOS and Windows (``.github/workflows/sid-python.yml``).
 
 

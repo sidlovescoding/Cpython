@@ -9,9 +9,11 @@ on:
   push:
     branches:
     - 'sid-python'
+    - 'sid-python-3.15'
   pull_request:
     branches:
     - 'sid-python'
+    - 'sid-python-3.15'
 
 permissions:
   contents: read
@@ -38,6 +40,7 @@ jobs:
     uses: ./.github/workflows/reusable-windows.yml
     with:
       arch: x64
+      interpreter: switch-case
 
   sid-python-features:
     # Quick check that the sid-python additions are present and work,
