@@ -1,6 +1,10 @@
 This is Python version 3.14.10+
 ===============================
 
+.. image:: https://github.com/sidlovescoding/Cpython/actions/workflows/sid-python.yml/badge.svg?branch=sid-python
+   :alt: sid-python build status on GitHub Actions
+   :target: https://github.com/sidlovescoding/Cpython/actions/workflows/sid-python.yml
+
 .. image:: https://github.com/python/cpython/actions/workflows/build.yml/badge.svg?branch=main&event=push
    :alt: CPython build status on GitHub Actions
    :target: https://github.com/python/cpython/actions
@@ -19,6 +23,82 @@ Copyright © 2001 Python Software Foundation.  All rights reserved.
 See the end of this file for further copyright and license information.
 
 .. contents::
+
+sid-python: changes from official Python
+----------------------------------------
+
+This is **sid-python**, a personal version of CPython 3.14.  It is still
+installed and run as ``python``; ``sys.version`` ends with ``(sid-python)``.
+Everything below is in addition to official Python 3.14, and each change has
+tests.
+
+New built-in functions
+^^^^^^^^^^^^^^^^^^^^^^
+
+- ``clamp(value, lo, hi)`` limits *value* to the range *lo* to *hi*:
+  ``clamp(15, 0, 10)`` returns ``10``.
+- ``flatten(iterable)`` returns a flat list of the items of nested
+  iterables: ``flatten([1, [2, [3]]])`` returns ``[1, 2, 3]``.  Strings and
+  bytes are kept whole.
+
+New ``extras`` module
+^^^^^^^^^^^^^^^^^^^^^
+
+Everyday helpers: ``unique()``, ``first()``, ``group_by()`` (like
+``Object.groupBy()`` in JavaScript), ``deep_get()``, ``human_size()``,
+``slugify()`` and the ``timer`` context manager.  See
+``Doc/library/extras.rst``.
+
+New REPL commands
+^^^^^^^^^^^^^^^^^
+
+In the interactive interpreter, type ``history`` to list recent input or
+``help-me`` for a list of commands and keyboard shortcuts.
+
+Bug fixes
+^^^^^^^^^
+
+These fix open bugs from the `CPython issue tracker
+<https://github.com/python/cpython/issues>`_ that are not yet fixed in
+official Python:
+
+- `gh-59598 <https://github.com/python/cpython/issues/59598>`_:
+  ``json.JSONDecoder.raw_decode()`` skips leading whitespace.
+- `gh-105426 <https://github.com/python/cpython/issues/105426>`_:
+  ``gzip.GzipFile`` can seek backwards when the gzip data does not start at
+  the beginning of the file.
+- `gh-106980 <https://github.com/python/cpython/issues/106980>`_:
+  ``tarfile`` gives a clear error instead of "seeking backwards is not
+  allowed" when a link in a stream cannot be extracted.
+- `gh-108931 <https://github.com/python/cpython/issues/108931>`_:
+  ``http.cookiejar`` removes expired cookies stored without a leading dot.
+- `gh-110501 <https://github.com/python/cpython/issues/110501>`_:
+  ``mailbox`` strips any line ending from the "From " line.
+- `gh-111066 <https://github.com/python/cpython/issues/111066>`_: setting
+  the ``memo`` of the C ``pickle.Unpickler`` keeps its entries and no longer
+  crashes with an empty dict.
+- `gh-131715 <https://github.com/python/cpython/issues/131715>`_:
+  ``http.server.BaseHTTPRequestHandler.end_headers()`` works before any
+  header is sent.
+- `gh-141998 <https://github.com/python/cpython/issues/141998>`_: text typed
+  for ``input()`` in the REPL is not syntax highlighted.
+- `gh-161222 <https://github.com/python/cpython/issues/161222>`_:
+  ``email.utils.encode_rfc2231()`` no longer writes ``None`` as the charset.
+- `gh-161289 <https://github.com/python/cpython/issues/161289>`_:
+  ``reprlib`` truncation accounts for a custom ``fillvalue``.
+- `gh-161452 <https://github.com/python/cpython/issues/161452>`_:
+  ``python -m random N`` prints an integer for an integer *N* <= 0.
+
+Documentation fixes for ``os.remove()`` (gh-121509),
+``types.MappingProxyType`` (gh-117956) and the ``FOR_ITER`` bytecode
+(gh-121399) are included too.
+
+Testing
+^^^^^^^
+
+Every push to the ``sid-python`` branch builds it and runs the full test
+suite on Linux, macOS and Windows (``.github/workflows/sid-python.yml``).
+
 
 General Information
 -------------------
