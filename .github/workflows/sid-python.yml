@@ -1,0 +1,72 @@
+name: sid-python tests
+
+# Build sid-python and run the full test suite on Linux, macOS and Windows
+# whenever the sid-python branch changes.  The jobs reuse the build recipes
+# that official CPython uses for its own CI (the reusable-*.yml files).
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - 'sid-python'
+  pull_request:
+    branches:
+    - 'sid-python'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: Linux
+    uses: ./.github/workflows/reusable-ubuntu.yml
+    with:
+      os: ubuntu-24.04
+
+  macos:
+    name: macOS
+    uses: ./.github/workflows/reusable-macos.yml
+    with:
+      os: macos-26
+
+  windows:
+    name: Windows
+    uses: ./.github/workflows/reusable-windows.yml
+    with:
+      arch: x64
+
+  sid-python-features:
+    # Quick check that the sid-python additions are present and work,
+    # so a broken change shows up clearly by name.
+    name: sid-python features (Linux)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+    - name: Build
+      run: |
+        ./configure --with-pydebug
+        make -j"$(nproc)"
+    - name: Check the sid-python additions
+      run: |
+        ./python -c "
+        import sys, extras
+        assert '(sid-python)' in sys.version, sys.version
+        assert clamp(15, 0, 10) == 10
+        assert flatten([1, [2, [3]]]) == [1, 2, 3]
+        assert extras.group_by([1, 2, 3], key=lambda n: n % 2) == {1: [1, 3], 0: [2]}
+        print('sid-python features OK:', sys.version)
+        "
+    - name: Run the sid-python tests
+      run: |
+        ./python -m test -v test_builtin -m '*clamp*' -m '*flatten*'
+        ./python -m test -v test_extras
+        ./python -m test -v test_pyrepl -m '*history_command*' \
+            -m '*history_variable*' -m '*help_me*' -m '*FormatHistory*' \
+            -m '*ReplCommands*'
